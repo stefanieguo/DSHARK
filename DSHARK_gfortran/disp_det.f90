@@ -276,7 +276,57 @@ function disp_det(omega,k)
      else
 
         !bi-Maxwellian scenario
+        !special case for parallel propagating wave
+if (abs(theta)<1e-4) then
+        epsilon_xx=epsilon_xx+ (beta_ratio(m)-1.0) *mu(m)*dens(m)*q(m)**2
+        epsilon_yy=epsilon_yy+ (beta_ratio(m)-1.0) *mu(m)*dens(m)*q(m)**2
+        n = 0
+        expBes=1.!exp_Bessel_In(n,lambda)
+        expdBes=0.!exp_dBessel_In(n,lambda)
+	zeta1=omega/sqrt(beta_para(m))/(k*cos(theta))/sqrt(mu(m)) *sqrt(dens(m))
 
+        zf1=Z_func(zeta1)
+        dzf1=dZ_func(zeta1)
+
+	epsilon_yy = epsilon_yy - sqrt(mu(m)) *dens(m)**1.5 * q(m)**2 / sqrt(beta_para(m)) / (k*cos(theta)) *&
+			   & (2*lambda*(expdBes-expBes)) *(beta_ratio(m)*omega)*zf1
+
+	epsilon_yz = epsilon_yz + i/2.0 *dens(m)* q(m) * ( k*sin(theta))/(k*cos(theta)) *&
+			   &  (beta_ratio(m)*omega)* (expdBes-expBes) *dzf1
+
+
+	epsilon_zz = epsilon_zz - dens(m)**2 * q(m)**2 *omega / beta_perp(m) /&
+			   & (k*cos(theta))**2 * omega*beta_ratio(m) * expBes * dzf1 	
+	n=1
+	expBes=0.!exp_Bessel_In(n,lambda)
+        expdBes=0.5!exp_dBessel_In(n,lambda)
+	zeta1=(omega-n*mu(m)*q(m))/sqrt(beta_para(m))/(k*cos(theta))/sqrt(mu(m)) *sqrt(dens(m))
+	zeta2=(omega+n*mu(m)*q(m))/sqrt(beta_para(m))/(k*cos(theta))/sqrt(mu(m)) *sqrt(dens(m))
+	zf1=Z_func(zeta1)
+        zf2=Z_func(zeta2)
+        ! needs to remove singularity at I_1(0)/0 -> 0.5
+        del_xx=sqrt(mu(m))*dens(m)**1.5 *q(m)**2 /sqrt(beta_para(m))/(k*cos(theta))*&
+                      & n**2 *(0.5) *(beta_ratio(m) * omega - (beta_ratio(m)-1.0)*n*mu(m)*q(m))*zf1+&
+                      
+                      & sqrt(mu(m))*dens(m)**1.5 *q(m)**2 /sqrt(beta_para(m))/(k*cos(theta))*&
+                      & n**2 *(0.5) *(beta_ratio(m) * omega + (beta_ratio(m)-1.0)*n*mu(m)*q(m))*zf2
+        del_yy = sqrt(mu(m)) *dens(m)**1.5 * q(m)**2 / sqrt(beta_para(m)) / (k*cos(theta)) *&
+                      & (n**2 * (0.5) - 2*lambda*(expdBes-expBes)) *&
+                      & (beta_ratio(m)*omega - (beta_ratio(m)-1.0)*n*mu(m)*q(m))*zf1+&
+                      
+                      sqrt(mu(m)) *dens(m)**1.5 * q(m)**2 / sqrt(beta_para(m)) / (k*cos(theta)) *&
+                      & (n**2 * (0.5) - 2*lambda*(expdBes-expBes)) *&
+                      & (beta_ratio(m)*omega + (beta_ratio(m)-1.0)*n*mu(m)*q(m))*zf2
+        del_xy = i*sqrt(mu(m))*dens(m)**1.5 *q(m)**2 /(k*cos(theta)) / sqrt(beta_para(m)) *n*&
+                      & (expdBes-expBes) *(beta_ratio(m) *omega - (beta_ratio(m) -1.0)*n*mu(m)*q(m))* zf1 +&
+                      
+                      & (-i)*sqrt(mu(m))*dens(m)**1.5 *q(m)**2 /(k*cos(theta)) / sqrt(beta_para(m)) *n*&
+                      & (expdBes-expBes) *(beta_ratio(m) *omega + (beta_ratio(m) -1.0)*n*mu(m)*q(m))* zf2
+
+	epsilon_xx = epsilon_xx + del_xx
+	epsilon_yy = epsilon_yy + del_yy
+	epsilon_xy = epsilon_xy + del_xy        
+else        !end special case
         esc=.true.
 
         epsilon_xx=epsilon_xx+ (beta_ratio(m)-1.0) *mu(m)*dens(m)*q(m)**2
@@ -444,7 +494,7 @@ function disp_det(omega,k)
            n=n+1
 
         enddo
-
+endif ! special case for parallel wave
      endif
 
   enddo
